@@ -1,0 +1,21 @@
+.container {
+    border: 1px solid grey;
+    border-radius: 25px;
+    padding: 20px;
+    max-width: 500px;
+    margin-top: 10rem;
+}
+
+.messages h4 {
+	padding: 1rem;
+	font-size: 1.5rem;
+	border-radius: 1rem;
+	box-shadow: rgba(0, 0, 0, .2);
+}
+
+.messages .success {
+	background-color: rgba(0, 255, 0, 0.1);
+}
+.messages .error {
+	background-color: rgba(255, 0, 0, 0.1);
+}

@@ -1,17 +1,20 @@
+import forex_python
 from flask import Flask, request, render_template, redirect, flash
 from flask_debugtoolbar import DebugToolbarExtension
-from forex_python.converter import CurrencyRates, CurrencyCodes
-import requests
+from forex_python.converter import CurrencyRates
 import json
 import datetime
-
-REQUESTS = requests.get('https://openexchangerates.org/api/currencies.json')
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "thisismyfirstforexconverterapp"
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 debug = DebugToolbarExtension(app)
+
+file_path = os.path.dirname(os.path.abspath(__file__))
+with open(file_path + '/assets/currencies.json') as f:
+    currency_data = json.loads(f.read())
 
 
 @app.route("/")
@@ -21,38 +24,44 @@ def home():
 
 @app.route("/convert")
 def convert_result():
-    currencies = json.loads(REQUESTS.text)
-    codes = currencies.keys()
-    names = currencies.values()
+    codes = [d['cc'] for d in currency_data]
+
     currentDT = datetime.datetime.now()
-    return render_template("convert.html", currencies=currencies,
-                           codes=codes, names=names, currentDT=currentDT)
+    return render_template("convert.html",
+                           codes=codes, currentDT=currentDT)
 
 
 @app.route("/convert/new", methods=['POST'])
 def convert():
-    amount = request.form["amount"]
-    to = request.form["to"]
-    from_code = request.form["from-code"]
+    try:
+        # get data from form
+        amount = request.form["amount"]
+        to = request.form["to"]
+        from_code = request.form["from-code"]
 
-    c = CurrencyRates()
-    converted = c.convert(from_code, to, float(amount))
+        # convert rates
+        c = CurrencyRates()
+        converted = c.convert(from_code, to, float(amount))
 
-    symbol = CurrencyCodes()
-    to_symbol = symbol.get_symbol(to)
+        # get currency name and symbol
+        def get_name_symbol(code):
+            return next((item for item in currency_data if item["cc"] == code),
+                        None)
 
-    flash(
-        f"{amount} {from_code} equals {to_symbol}{round(converted, 2)}({to})",
-        'success')
+        from_name = get_name_symbol(from_code)['name']
+        to_symb = get_name_symbol(to)['symbol']
+        to_name = get_name_symbol(to)['name']
+
+        # flash result message
+        flash(
+            f"{amount} {from_name} equals {to_symb}{round(converted, 2)} {to_name}",
+            'success')
+    except forex_python.converter.RatesNotAvailableError:
+        flash(
+            f"{from_code} to {to} conversion is currently not available.",
+            'error')
+
     return redirect('/convert')
 
-# @app.route('/movies/new', methods=["POST"])
-# def add_movie():
-#     title = request.form['title']
-#     # add to Pretend DB
-#     if title in MOVIES:
-#         flash('MOVIE ALREADY EXIST', 'error')
-#     else:
-#         MOVIES.add(title)
-#         flash("Added Movie Successfully", 'success')
-#     return redirect('/movies')
+if __name__ == '__main__':
+    app.run()

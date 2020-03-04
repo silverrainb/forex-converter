@@ -2,12 +2,12 @@
 {% block title%}Forex Converter{% endblock %}
 {% block content%}
 <form action="/convert/new" method="POST">
-    <div class="container p-s5 mb-5" style="max-width: 500px; margin-top: 10rem;">
-        <h1 class="text-center mb-5">Forex Converter</h1>
-        <section class="messages mb-5">
+    <div class="container p-s5 mb-5">
+        <h1 class="text-center mb-3">Forex Converter</h1>
+        <section class="messages mb-3">
             {% for category, msg in get_flashed_messages(with_categories=true)%}
-            <h4 class="{{category}} text-center info"> {{ msg }} </h4>
             <h5 class="lead text-center mt-5">{{currentDT.strftime('%Y-%m-%d %H:%M:%S')}}</h5>
+            <h4 class="{{category}} text-center info"> {{ msg }} </h4>
             {% endfor %}
         </section>
         <div class="form-row">
